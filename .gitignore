@@ -1,0 +1,59 @@
+# =============================================================================
+# .gitignore - Azure Landing Zone
+# =============================================================================
+# ARCHITECTURE DECISION: Terraform state files, plan files, and local
+# overrides are excluded from version control. State files contain sensitive
+# infrastructure configuration. Plan files can contain secrets in plain text.
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+terraform.rc
+.terraformrc
+/terraform.tfvars
+!terraform.tfvars.example
+
+# Plan files
+*.plan
+tfplan-*
+
+# CLI usage
+.terraform.lock.hcl
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Dependency directories
+vendor/
+
+# Test output
+*.test
+*.out
+
+# Infracost
+infracost-output.json
+
+# Checkov
+.checkov-cache/
+
+# Pre-commit
+.secrets.baseline
+
+# Local usage
+usage.yml

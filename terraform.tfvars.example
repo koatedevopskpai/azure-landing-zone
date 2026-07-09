@@ -1,0 +1,55 @@
+# =============================================================================
+# Terraform Variables Example - SecondWave Azure Landing Zone
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values.
+# SECURITY SAFEGUARD: Never commit terraform.tfvars to version control.
+# Use CI/CD environment variables or GitHub Actions secrets for sensitive values.
+
+tenant_id      = "00000000-0000-0000-0000-000000000000"
+subscription_id = "00000000-0000-0000-0000-000000000000"
+root_mg_name   = "SecondWave"
+
+environments = {
+  dev = {
+    management_group_name = "Landing-Zones-Dev"
+    spoke_cidr            = "10.1.0.0/16"
+    region                = "uksouth"
+    tags = {
+      Environment = "Development"
+      CostCenter  = "ENG-DEV"
+      DataClass   = "Internal"
+    }
+  }
+  staging = {
+    management_group_name = "Landing-Zones-Staging"
+    spoke_cidr            = "10.2.0.0/16"
+    region                = "uksouth"
+    tags = {
+      Environment = "Staging"
+      CostCenter  = "ENG-STG"
+      DataClass   = "Confidential"
+    }
+  }
+  prod = {
+    management_group_name = "Landing-Zones-Prod"
+    spoke_cidr            = "10.3.0.0/16"
+    region                = "uksouth"
+    tags = {
+      Environment = "Production"
+      CostCenter  = "ENG-PROD"
+      DataClass   = "Restricted"
+    }
+  }
+}
+
+# hub_vnet_cidr    = "10.0.0.0/16"
+# firewall_sku     = "Standard"
+# bastion_sku      = "Standard"
+
+# log_analytics_retention_days = 730
+# ddos_protection_plan_enabled = true
+
+# policy_enforce_private_endpoints = true
+# policy_deny_public_ip_on_nics    = true
+# policy_enforce_cmk               = true
+# policy_enforce_https_storage     = true
