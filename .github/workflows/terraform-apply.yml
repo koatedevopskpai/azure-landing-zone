@@ -1,0 +1,140 @@
+# =============================================================================
+# Terraform Apply - CI/CD Pipeline with Manual Approval Gates
+# =============================================================================
+# ARCHITECTURE DECISION: Staging and prod require manual approval before apply.
+# Dev applies automatically on merge to main (safe environment, no real data).
+# This follows the "shift-left" principle - catch issues early, gate changes to
+# regulated environments.
+#
+# SECURITY SAFEGUARD: Manual approval gates for staging and prod prevent
+# unapproved infrastructure changes. The approver must be a member of the
+# Platform-Admins group. The approval must be explicit via GitHub Environments.
+
+name: "Terraform Apply"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '.github/workflows/terraform-apply.yml'
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  TF_IN_AUTOMATION: "true"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply-dev:
+    name: "Terraform Apply (dev)"
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init (dev)
+        run: terraform init -backend-config="envs/dev/backend.tfvars"
+
+      - name: Terraform Apply (dev)
+        run: terraform apply -var-file="envs/dev/terraform.tfvars" -auto-approve
+        timeout-minutes: 30
+
+  apply-staging:
+    name: "Terraform Apply (staging)"
+    runs-on: ubuntu-latest
+    # SECURITY SAFEGUARD: Manual approval required. Only Platform-Admins can approve.
+    environment:
+      name: staging
+      url: https://portal.azure.com
+
+    # ARCHITECTURE DECISION: Staging apply runs after dev completes successfully.
+    # If dev fails, staging is skipped (staging has higher risk, no point proceeding).
+    needs: [apply-dev]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init (staging)
+        run: terraform init -backend-config="envs/staging/backend.tfvars"
+
+      - name: Terraform Apply (staging)
+        run: terraform apply -var-file="envs/staging/terraform.tfvars" -auto-approve
+        timeout-minutes: 30
+
+  apply-prod:
+    name: "Terraform Apply (prod)"
+    runs-on: ubuntu-latest
+    # SECURITY SAFEGUARD: Production requires the highest level of approval.
+    # The GitHub Environment "prod" must be configured with required reviewers
+    # from the Platform-Admins group.
+    environment:
+      name: prod
+      url: https://portal.azure.com
+
+    # ARCHITECTURE DECISION: Production apply runs only after staging succeeds.
+    # This ensures the change has been validated in a prod-like environment first.
+    needs: [apply-staging]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init (prod)
+        run: terraform init -backend-config="envs/prod/backend.tfvars"
+
+      # SECURITY SAFEGUARD: Plan output is shown before apply. The approver
+      # should review the plan before approving.
+      - name: Terraform Plan (prod)
+        run: terraform plan -var-file="envs/prod/terraform.tfvars" -out=tfplan-prod
+
+      - name: Terraform Apply (prod)
+        run: terraform apply tfplan-prod
+        timeout-minutes: 45

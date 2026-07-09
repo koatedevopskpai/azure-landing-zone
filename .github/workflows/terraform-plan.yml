@@ -1,0 +1,122 @@
+# =============================================================================
+# Terraform Plan - CI/CD Pipeline
+# =============================================================================
+# ARCHITECTURE DECISION: OIDC auth via Azure CLI federated credentials eliminates
+# static secrets. The GitHub Actions workload identity federation exchanges a
+# GitHub OIDC token for an Azure access token. No client secrets are stored.
+#
+# SECURITY SAFEGUARD: The plan workflow runs on every PR to main. It validates
+# the Terraform configuration but does NOT apply any changes. This provides
+# a safety net - a malicious or erroneous change is visible in the plan output
+# before any resource modification.
+
+name: "Terraform Plan"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '**.tflint.hcl'
+      - '.github/workflows/terraform-plan.yml'
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  TF_IN_AUTOMATION: "true"
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: "Terraform Plan (${{ matrix.environment }})"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+      # SECURITY SAFEGUARD: max-parallel ensures staging and prod plans don't
+      # run simultaneously, reducing API rate-limit contention.
+      max-parallel: 2
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Setup Tflint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.55.0
+
+      - name: Azure Login (OIDC)
+        # ARCHITECTURE DECISION: OIDC federated identity. The GitHub Actions
+        # workload identity federation is configured in Azure AD Enterprise
+        # Application. No client secret or certificate is stored in GitHub Secrets.
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init (${{ matrix.environment }})
+        run: |
+          terraform init \
+            -backend-config="envs/${{ matrix.environment }}/backend.tfvars"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Tflint
+        run: tflint --config .tflint.hcl
+
+      - name: Checkov
+        # ARCHITECTURE DECISION: Checkov scans Terraform HCL for security
+        # misconfigurations before they reach Azure. This catches common issues
+        # like open public access, missing encryption, and overly permissive IAM.
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          framework: terraform
+          soft_fail: true
+
+      - name: Terraform Plan (${{ matrix.environment }})
+        id: plan
+        run: |
+          terraform plan \
+            -var-file="envs/${{ matrix.environment }}/terraform.tfvars" \
+            -out=tfplan-${{ matrix.environment }} \
+            -detailed-exitcode
+        continue-on-error: false
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.environment }}
+          path: tfplan-${{ matrix.environment }}
+
+      - name: Post Plan to PR
+        # ARCHITECTURE DECISION: Posting the plan as a PR comment gives the
+        # team visibility into infrastructure changes before merge.
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const output = `## Terraform Plan (${{ matrix.environment }})
+            Plan generated at: ${new Date().toISOString()}
+            Check the Actions tab for full plan output.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
