@@ -1,0 +1,197 @@
+{
+  "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/Microsoft.Portal/dashboards/landing-zone-overview",
+  "name": "landing-zone-overview",
+  "type": "Microsoft.Portal/dashboards",
+  "location": "uksouth",
+  "tags": {
+    "ManagedBy": "Terraform",
+    "Project": "SecondWave",
+    "Environment": "Platform"
+  },
+  "properties": {
+    "lenses": [
+      {
+        "order": 0,
+        "parts": [
+          {
+            "position": { "x": 0, "y": 0, "rowSpan": 2, "colSpan": 2 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-network-uksouth/providers/Microsoft.Network/azureFirewalls/afw-hub-uksouth"
+                          },
+                          "name": "FirewallHealth",
+                          "aggregationType": 4,
+                          "namespace": "microsoft.network/azurefirewalls",
+                          "metricVisualization": { "displayName": "Firewall Health" }
+                        }
+                      ],
+                      "title": "Azure Firewall Health",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 2, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": { "x": 2, "y": 0, "rowSpan": 2, "colSpan": 2 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-network-uksouth/providers/Microsoft.Network/networkWatchers/NetworkWatcher_uksouth"
+                          },
+                          "name": "NSGFlowLogs",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.network/networkwatchers",
+                          "metricVisualization": { "displayName": "NSG Flow Logs" }
+                        }
+                      ],
+                      "title": "VNet Flow Logs (NSG)",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 2, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": { "x": 4, "y": 0, "rowSpan": 2, "colSpan": 2 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-network-uksouth/providers/Microsoft.KeyVault/vaults/kv-platform-uksouth"
+                          },
+                          "name": "ServiceApiHit",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.keyvault/vaults",
+                          "metricVisualization": { "displayName": "Key Vault API Hits" }
+                        },
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-network-uksouth/providers/Microsoft.KeyVault/vaults/kv-platform-uksouth"
+                          },
+                          "name": "ServiceApiLatency",
+                          "aggregationType": 4,
+                          "namespace": "microsoft.keyvault/vaults",
+                          "metricVisualization": { "displayName": "Key Vault Latency" }
+                        }
+                      ],
+                      "title": "Key Vault Metrics",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 2, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": { "x": 6, "y": 0, "rowSpan": 2, "colSpan": 2 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/Microsoft.OperationalInsights/workspaces/log-uksouth"
+                          },
+                          "name": "Ingestion",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.operationalinsights/workspaces",
+                          "metricVisualization": { "displayName": "Data Ingestion (GB)" }
+                        }
+                      ],
+                      "title": "Log Analytics Ingestion",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 2, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": { "x": 0, "y": 2, "rowSpan": 3, "colSpan": 4 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000"
+                          },
+                          "name": "policyCompliance",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.policyinsights/policystates",
+                          "metricVisualization": { "displayName": "Policy Compliance Rate" }
+                        }
+                      ],
+                      "title": "Azure Policy Compliance",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 6, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": { "x": 4, "y": 2, "rowSpan": 3, "colSpan": 4 },
+            "metadata": {
+              "type": "Extension/HubExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-hub-network-uksouth/providers/Microsoft.Network/azureFirewalls/afw-hub-uksouth"
+                          },
+                          "name": "Throughput",
+                          "aggregationType": 4,
+                          "namespace": "microsoft.network/azurefirewalls",
+                          "metricVisualization": { "displayName": "Firewall Throughput (Mbps)" }
+                        }
+                      ],
+                      "title": "Firewall Throughput",
+                      "titleKind": 1,
+                      "visualization": { "chartType": 2, "legendVisualization": { "isVisible": true, "position": 2 } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

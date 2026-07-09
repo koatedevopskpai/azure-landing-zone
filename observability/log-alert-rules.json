@@ -1,0 +1,87 @@
+{
+  "description": "Log Analytics alert rules for SecondWave landing zone security monitoring.",
+  "alerts": [
+    {
+      "name": "Firewall-Denied-Connections-High",
+      "description": "High volume of denied outbound connections from Azure Firewall - possible data exfiltration or malware C2.",
+      "severity": 2,
+      "frequency": 5,
+      "timeWindow": 15,
+      "threshold": 100,
+      "query": "AzureDiagnostics | where Category == 'AzureFirewallNetworkRule' | where action_s == 'Deny' | summarize DeniedCount = count() by bin(TimeGenerated, 5m) | where DeniedCount > 100",
+      "actionGroupIds": [
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/microsoft.insights/actionGroups/security-incident-response"
+      ]
+    },
+    {
+      "name": "KeyVault-Access-Anomaly",
+      "description": "Unusual Key Vault access pattern - potential credential theft or privilege escalation.",
+      "severity": 1,
+      "frequency": 5,
+      "timeWindow": 30,
+      "threshold": 1,
+      "query": "AzureDiagnostics | where ResourceType == 'VAULTS' | where OperationName in ('VaultPurge', 'VaultDelete', 'VaultUndelete') | project TimeGenerated, OperationName, CallerIPAddress, Identity, ResourceId",
+      "actionGroupIds": [
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/microsoft.insights/actionGroups/security-incident-response"
+      ]
+    },
+    {
+      "name": "Policy-Non-Compliance-Critical",
+      "description": "Critical resources are non-compliant with Azure Policy - immediate investigation required.",
+      "severity": 1,
+      "frequency": 15,
+      "timeWindow": 60,
+      "threshold": 1,
+      "query": "AzureActivity | where CategoryValue == 'Policy' | where OperationNameValue contains 'nonCompliant' | where _ResourceId contains '/kv-platform-' or _ResourceId contains '/afw-' | project TimeGenerated, ResourceId, PolicyDefinitionName",
+      "actionGroupIds": [
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/microsoft.insights/actionGroups/security-incident-response"
+      ]
+    },
+    {
+      "name": "NSG-Internet-Ingress",
+      "description": "Inbound traffic from internet detected on workload NSG - potential misconfiguration or attack.",
+      "severity": 2,
+      "frequency": 5,
+      "timeWindow": 15,
+      "threshold": 10,
+      "query": "AzureDiagnostics | where Category == 'NetworkSecurityGroupFlowEvent' | where flowStatus_s == 'A' | where flowDirection_s == 'I' | where sourceIP_s !startswith '10.' | summarize Count = count() by bin(TimeGenerated, 5m) | where Count > 10",
+      "actionGroupIds": [
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/microsoft.insights/actionGroups/security-incident-response"
+      ]
+    },
+    {
+      "name": "Bastion-Audit-Failures",
+      "description": "Failed Bastion authentication attempts - possible brute-force attack on management plane.",
+      "severity": 2,
+      "frequency": 5,
+      "timeWindow": 15,
+      "threshold": 5,
+      "query": "AzureDiagnostics | where Category == 'BastionAuditLogs' | where OperationName contains 'Failed' | summarize FailureCount = count() by bin(TimeGenerated, 5m), CallerIPAddress | where FailureCount > 5",
+      "actionGroupIds": [
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-log-analytics-uksouth/providers/microsoft.insights/actionGroups/security-incident-response"
+      ]
+    }
+  ],
+  "actionGroups": [
+    {
+      "name": "security-incident-response",
+      "shortName": "sec-ir",
+      "enabled": true,
+      "emailReceivers": [
+        {
+          "name": "platform-security-team",
+          "emailAddress": "security@secondwave-insurance.co.uk",
+          "useCommonAlertSchema": true
+        }
+      ],
+      "smsReceivers": [],
+      "webhookReceivers": [
+        {
+          "name": "pagerduty",
+          "serviceUri": "https://events.pagerduty.com/integration/.../enqueue",
+          "useCommonAlertSchema": true
+        }
+      ]
+    }
+  ]
+}
