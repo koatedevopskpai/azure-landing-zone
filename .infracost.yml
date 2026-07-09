@@ -1,0 +1,24 @@
+# ARCHITECTURE DECISION: Infracost estimates cloud costs from Terraform config.
+# Run monthly to track cost drift and validate budget adherence.
+#
+# Usage:
+#   infracost breakdown --path . --config-file .infracost.yml
+
+version: 0.1
+
+projects:
+  - path: .
+    name: landing-zone
+    usage_file: usage.yml
+    terraform_var_files:
+      - envs/prod/terraform.tfvars
+
+enable_dashboard: false
+
+currency: GBP
+
+output_fields:
+  - name
+  - monthlyQuantity
+  - unit
+  - monthlyCost

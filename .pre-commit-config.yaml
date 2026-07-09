@@ -1,0 +1,44 @@
+# ARCHITECTURE DECISION: Pre-commit hooks enforce code quality and security
+# checks before code is committed. Hooks run locally on developer machines
+# and in CI/CD pipelines.
+#
+# SECURITY SAFEGUARD: The detect-secrets hook prevents accidental commit of
+# secrets, keys, or connection strings. The trailing-whitespace and
+# end-of-file-fixer hooks prevent common git issues.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.23
+    hooks:
+      - id: terraform-fmt
+      - id: terraform-validate
+      - id: tflint
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.1
+    hooks:
+      - id: terraform_checkov
+        args:
+          - --args=--config-file .checkov.yml
+      - id: terraform_tflint
+        args:
+          - --args=--config=.tflint.hcl
+      - id: terraform_docs
+        args:
+          - --args=--output-mode=inject
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]

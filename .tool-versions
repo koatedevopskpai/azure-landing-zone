@@ -1,0 +1,11 @@
+# ARCHITECTURE DECISION: .tool-versions is used by asdf-vm to manage tool
+# versions across the team. All engineers use identical versions for
+# Terraform, TFLint, and Azure CLI. This eliminates "works on my machine"
+# issues in CI/CD.
+
+terraform 1.9.8
+tflint 0.55.0
+terraform-docs 0.19.0
+checkov 3.2.0
+infracost 0.10.0
+azure-cli 2.65.0

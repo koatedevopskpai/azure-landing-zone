@@ -1,0 +1,33 @@
+# ARCHITECTURE DECISION: Checkov scans Terraform configuration for security
+# misconfigurations. The skip list acknowledges known false positives or
+# architecturally accepted risks.
+#
+# SECURITY SAFEGUARD: Checkov runs in CI/CD as a non-blocking scan (soft_fail).
+# Results are reviewed by the Platform team. Critical findings are raised as
+# GitHub Issues for remediation.
+
+soft_fail: true
+
+framework:
+  - terraform
+  - all
+
+skip_check:
+  # CKV_AZURE_42: We intentionally use a single Log Analytics workspace for
+  # cost efficiency. A 350-person insurer does not need workspace isolation.
+  - CKV_AZURE_42
+
+  # CKV_AZURE_88: We use local variables for naming conventions. This is a
+  # design choice for readability, not a security concern.
+  - CKV_AZURE_88
+
+  # CKV_TF_1: Terraform module sources from same repo (local), not external.
+  # This is intentional for monorepo management.
+  - CKV_TF_1
+
+  # CKV_AZURE_173: We do not enable Advanced Threat Protection on every
+  # storage account because the Log Analytics workspace provides central
+  # threat detection via Sentinel.
+  - CKV_AZURE_173
+
+output_format: sarif
