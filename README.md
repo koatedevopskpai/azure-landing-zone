@@ -1,6 +1,6 @@
 # SecondWave Azure Landing Zone
 
-**Enterprise-grade Azure CAF Landing Zone for a 350-person UK Insurer (FCA/PRA regulated)**
+**Reference Azure CAF landing-zone design targeting FCA/PRA-aligned controls (design intent; not assessed).**
 
 ## Scenario: SecondWave Insurance
 
